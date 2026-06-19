@@ -28,19 +28,45 @@ st.markdown("<div class='sub-title'>⚡ 네이버 금융 실시간 연동 (10초
 st.markdown("---")
 
 # 네이버 금융에서 실시간 현재가를 크롤링하는 함수
+# 네이버 금융에서 실시간 현재가를 크롤링하는 함수 (강화 버전)
 def get_realtime_price_naver(code):
     url = f"https://finance.naver.com/item/main.naver?code={code}"
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}
-    res = requests.get(url, headers=headers)
-    soup = BeautifulSoup(res.text, 'html.parser')
     
-    # 현재가 태그 찾기 (네이버 금융 HTML 구조 기준)
-    today_div = soup.find('div', {'class': 'today'})
-    if today_div:
-        price_str = today_div.find('span', {'class': 'blind'}).text
-        # 콤마(,) 제거하고 정수로 변환
-        return int(price_str.replace(',', ''))
-    return 0
+    # 일반 사람의 브라우저인 것처럼 완벽하게 위장하는 헤더
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2.1 Safari/605.1.15',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Connection': 'keep-alive',
+        'Referer': 'https://finance.naver.com/'
+    }
+    
+    try:
+        # 타임아웃을 3초로 주어 무한정 멈춰있는 것 방지
+        res = requests.get(url, headers=headers, timeout=3)
+        
+        # 200(정상)이 아니면 차단당한 것
+        if res.status_code != 200:
+            st.error(f"[{code}] 네이버 접속 차단됨 (에러 코드: {res.status_code})")
+            return 0
+            
+        soup = BeautifulSoup(res.text, 'html.parser')
+        
+        today_div = soup.find('div', {'class': 'today'})
+        if today_div:
+            price_str = today_div.find('span', {'class': 'blind'}).text
+            return int(price_str.replace(',', ''))
+        else:
+            st.error(f"[{code}] 페이지 구조를 읽지 못했습니다. (봇 방지 캡차 의심)")
+            return 0
+            
+    except requests.exceptions.Timeout:
+        st.error(f"[{code}] 네이버 응답이 너무 느립니다. (타임아웃)")
+        return 0
+    except Exception as e:
+        st.error(f"[{code}] 오류 발생: {e}")
+        return 0
+
 
 # 10초마다 재실행 (차단 방지를 위해 시간 상향)
 @st.fragment(run_every=10)
