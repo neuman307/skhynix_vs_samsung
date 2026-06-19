@@ -1,73 +1,81 @@
 import streamlit as st
+import yfinance as yf
 import plotly.graph_objects as go
 
-# 1. 페이지 기본 설정
-st.set_page_config(
-    page_title="삼성전자 vs SK하이닉스 시총 비교", page_icon="📊", layout="centered"
-)
+# 페이지 기본 설정
+st.set_page_config(page_title="실시간 시총 비교", page_icon="📊", layout="centered")
 
-st.title("📊 삼성전자 vs SK하이닉스 시총 비교 분석")
+st.title("📊 실시간 삼성전자 vs SK하이닉스 시총 비교")
+st.write("yfinance 패키지를 통해 실제 주가 데이터를 받아와 5초마다 자동 갱신합니다.")
 st.markdown("---")
 
-# 2. 사이드바에서 데이터 입력 받기 (기본값 설정)
-st.sidebar.header("⚙️ 시가총액 데이터 입력")
+# 5초마다 이 안의 코드만 재실행 (st.fragment)
+@st.fragment(run_every=5)
+def render_dashboard():
+    try:
+        # 발행주식수 (보통주 기준 고정값 세팅)
+        samsung_shares = 5969782550
+        hynix_shares = 728002365
 
-samsung_cap = st.sidebar.number_input(
-    "삼성전자 시가총액 (억원)",
-    min_value=1,
-    value=2154353,  # 기본값
-    step=1000,
-    format="%d",
-)
+        # yfinance를 통해 오늘 하루치 주가 데이터를 가장 빠르게 조회
+        samsung_data = yf.Ticker("005930.KS").history(period="1d")
+        hynix_data = yf.Ticker("000660.KS").history(period="1d")
 
-hynix_cap = st.sidebar.number_input(
-    "SK하이닉스 시가총액 (억원)",
-    min_value=1,
-    value=2000000,  # 기본값
-    step=1000,
-    format="%d",
-)
+        if samsung_data.empty or hynix_data.empty:
+            st.warning("데이터를 불러오지 못했습니다. 장이 열리지 않은 시간이거나 API 지연일 수 있습니다.")
+            return
 
-# 3. 데이터 계산
-percentage = (hynix_cap / samsung_cap) * 100
+        # 가장 최근 종가(현재가) 추출
+        samsung_price = int(samsung_data['Close'].iloc[-1])
+        hynix_price = int(hynix_data['Close'].iloc[-1])
 
-# 4. 메인 화면에 대시보드 카드 배치
-col1, col2 = st.columns(2)
+        # 시가총액 계산 (주식수 * 현재가 / 1억)
+        samsung_cap = int((samsung_price * samsung_shares) / 100000000)
+        hynix_cap = int((hynix_price * hynix_shares) / 100000000)
+        
+        # 비율 계산
+        percentage = (hynix_cap / samsung_cap) * 100
 
-with col1:
-    st.metric(label="삼성전자 시가총액", value=f"{samsung_cap:,} 억 원")
+        # 메인 카드 UI 출력
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric(
+                label="삼성전자 (현재가 / 시총)", 
+                value=f"{samsung_price:,} 원", 
+                delta=f"{samsung_cap:,} 억 원"
+            )
+        with col2:
+            st.metric(
+                label="SK하이닉스 (현재가 / 시총)", 
+                value=f"{hynix_price:,} 원", 
+                delta=f"삼성 대비 {percentage:.2f}%",
+                delta_color="inverse" if percentage < 90 else "normal"
+            )
 
-with col2:
-    st.metric(
-        label="SK하이닉스 시가총액",
-        value=f"{hynix_cap:,} 억 원",
-        delta=f"삼성 대비 {percentage:.2f}%",
-    )
+        st.markdown("---")
+        st.info(f"⏱️ 실시간 시장 데이터 연동 중... 현재 시총 비율은 **{percentage:.2f}%** 입니다.")
 
-st.markdown("---")
+        # Plotly 차트 출력
+        fig = go.Figure(
+            go.Bar(
+                x=["삼성전자", "SK하이닉스"],
+                y=[samsung_cap, hynix_cap],
+                marker_color=["#0A47A3", "#FF6C00"],
+                text=[f"{samsung_cap:,}억", f"{hynix_cap:,}억"],
+                textposition="auto",
+            )
+        )
+        fig.update_layout(
+            title="실시간 시가총액 비교 (단위: 억 원)",
+            xaxis_title="기업명",
+            yaxis_title="시가총액",
+            template="plotly_white",
+            height=400
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
-# 5. 하이라이트 결과창
-st.subheader("💡 분석 결과")
-st.info(
-    f"현재 **SK하이닉스**의 시가총액은 **삼성전자** 대비 **{percentage:.2f}%** 수준입니다."
-)
+    except Exception as e:
+        st.error(f"데이터를 불러오는 중 오류가 발생했습니다: {e}")
 
-# 6. Plotly를 활용한 시각화 차트
-fig = go.Figure(
-    go.Bar(
-        x=["삼성전자", "SK하이닉스"],
-        y=[samsung_cap, hynix_cap],
-        marker_color=["#0A47A3", "#FF6C00"],  # 기업 고유 컬러 반영
-        text=[f"{samsung_cap:,}억", f"{hynix_cap:,}억"],
-        textposition="auto",
-    )
-)
-
-fig.update_layout(
-    title="시가총액 비교 그래프 (단위: 억 원)",
-    xaxis_title="기업명",
-    yaxis_title="시가총액",
-    template="plotly_white",
-)
-
-st.plotly_chart(fig, use_container_width=True)
+# 앱 실행
+render_dashboard()
