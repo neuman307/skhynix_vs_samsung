@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="코스피 4대장 시총 대시보드", page_icon="🔥", layout="wide")
 
-# 화려한 타이틀, 모던 카드, 하이닉스 오렌지 프로그레스 바 CSS 적용
+# 모바일 반응형 및 줄바꿈 방지가 추가된 CSS
 modern_css = """
 <style>
     .stApp { background-color: #f5f7fa; font-family: 'Pretendard', sans-serif; }
@@ -54,10 +54,10 @@ modern_css = """
         margin-bottom: 15px;
     }
     .pg-label-box { display: flex; flex-direction: column; }
-    .pg-label-name { font-size: 1.05rem; font-weight: 800; color: #333; }
-    .pg-label-cap { font-size: 0.9rem; font-weight: 600; color: #86868b; margin-top: 3px; }
-    
-    .pg-diff { color: #E63312; font-weight: 900; font-size: 1.7rem; letter-spacing: -0.5px; }
+    /* 💡 줄바꿈(nowrap) 방지 추가 */
+    .pg-label-name { font-size: 1.05rem; font-weight: 800; color: #333; white-space: nowrap; }
+    .pg-label-cap { font-size: 0.9rem; font-weight: 600; color: #86868b; margin-top: 3px; white-space: nowrap; }
+    .pg-diff { color: #E63312; font-weight: 900; font-size: 1.7rem; letter-spacing: -0.5px; white-space: nowrap; text-align: center; margin: 0 10px; }
 
     .pg-track { background-color: #e9ecef; height: 14px; border-radius: 10px; position: relative; width: 100%; }
     .pg-fill {
@@ -70,6 +70,16 @@ modern_css = """
         padding: 4px 12px; border-radius: 20px; box-shadow: 0 2px 8px rgba(230, 51, 18, 0.4);
         transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
         white-space: nowrap;
+    }
+
+    /* 📱 모바일 화면(가로 600px 이하) 전용 스타일 */
+    @media (max-width: 600px) {
+        .pg-container { padding: 20px 15px 35px 15px; } /* 좌우 여백 축소 */
+        .pg-title { font-size: 1rem; margin-bottom: 15px; }
+        .pg-diff { font-size: 1.15rem; margin: 0 5px; } /* 중앙 차이 금액 폰트 대폭 축소 */
+        .pg-label-name { font-size: 0.85rem; } /* 종목명 축소 */
+        .pg-label-cap { font-size: 0.75rem; } /* 시총 수치 축소 */
+        .main-title { font-size: 2.2rem; } /* 메인 타이틀 크기도 모바일에 맞게 축소 */
     }
 </style>
 """
@@ -130,7 +140,6 @@ def render_dashboard():
         bar_width = min(hynix_ratio, 100)
         diff_cap = samsung_cap - hynix_cap 
         
-        # 💡 수정된 부분: HTML 문자열의 왼쪽 들여쓰기를 완벽히 제거하여 코드 블록으로 인식되는 현상 방지
         progress_html = f"""
 <div class="pg-container">
     <div class="pg-title">🏃‍♂️ 게섯거라 삼성전자!</div>
