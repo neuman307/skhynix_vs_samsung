@@ -139,4 +139,14 @@ def render_dashboard():
             yaxis=dict(title="시가총액 (조 원)", tickfont=dict(color="#515154")),
             template="plotly_white",
             height=450,
-            margin=dict(l=40, r=40,
+            margin=dict(l=40, r=40, t=60, b=40),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    except Exception as e:
+        st.error(f"데이터 갱신 중 오류가 발생했습니다: {e}")
+
+# 앱 실행
+render_dashboard()
