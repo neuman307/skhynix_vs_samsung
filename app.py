@@ -10,7 +10,6 @@ modern_css = """
 <style>
     .stApp { background-color: #f5f7fa; font-family: 'Pretendard', sans-serif; }
     
-    /* 화려한 애니메이션 그라데이션 타이틀 */
     .main-title { 
         font-size: 2.8rem; 
         font-weight: 900; 
@@ -34,7 +33,6 @@ modern_css = """
 
     .sub-title { text-align: center; color: #86868b; font-size: 1.05rem; margin-bottom: 20px; font-weight: 500; }
     
-    /* 모던 글래스모피즘 카드 */
     div[data-testid="metric-container"] {
         background-color: #ffffff; border-radius: 16px; padding: 24px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid #eaeaea;
@@ -44,7 +42,6 @@ modern_css = """
     div[data-testid="stMetricLabel"] { color: #515154 !important; font-weight: 600 !important; font-size: 1.1rem !important; }
     div[data-testid="stMetricValue"] { color: #1d1d1f !important; font-weight: 800 !important; font-size: 1.9rem !important; }
 
-    /* --- 🚀 업데이트된 프로그레스 바 스타일 --- */
     .pg-container {
         background: #ffffff; border-radius: 16px; padding: 25px 30px 35px 30px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid #eaeaea;
@@ -52,7 +49,6 @@ modern_css = """
     }
     .pg-title { font-size: 1.1rem; font-weight: 800; color: #E63312; margin-bottom: 20px; }
     
-    /* 양끝 텍스트와 중앙 텍스트 정렬을 위한 Flex 레이아웃 */
     .pg-labels {
         display: flex; justify-content: space-between; align-items: center;
         margin-bottom: 15px;
@@ -61,7 +57,6 @@ modern_css = """
     .pg-label-name { font-size: 1.05rem; font-weight: 800; color: #333; }
     .pg-label-cap { font-size: 0.9rem; font-weight: 600; color: #86868b; margin-top: 3px; }
     
-    /* 중앙 격차 금액 텍스트 */
     .pg-diff { color: #E63312; font-weight: 900; font-size: 1.7rem; letter-spacing: -0.5px; }
 
     .pg-track { background-color: #e9ecef; height: 14px; border-radius: 10px; position: relative; width: 100%; }
@@ -80,11 +75,9 @@ modern_css = """
 """
 st.markdown(modern_css, unsafe_allow_html=True)
 
-# 메인 타이틀
 st.markdown("<div class='main-title'>코스피 4대장<br>현재가 및 시총</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-title'>⚡ 네이버 금융 실시간 연동 (10초 자동 갱신)</div>", unsafe_allow_html=True)
 
-# 네이버 금융 크롤링 함수
 def get_realtime_price_naver(code):
     url = f"https://finance.naver.com/item/main.naver?code={code}"
     headers = {
@@ -109,7 +102,6 @@ def get_realtime_price_naver(code):
         st.error(f"[{code}] 오류 발생: {e}")
         return 0
 
-# 10초마다 데이터 갱신
 @st.fragment(run_every=10)
 def render_dashboard():
     try:
@@ -123,7 +115,6 @@ def render_dashboard():
         caps = {}
         prices = {}
 
-        # 1. 최신 데이터 수집
         for name, info in stocks.items():
             price = get_realtime_price_naver(info["code"])
             if price == 0:
@@ -135,39 +126,35 @@ def render_dashboard():
         samsung_cap = caps["삼성전자"]
         hynix_cap = caps["SK하이닉스"]
         
-        # 🚀 2. 코스피 1위 추격 프로그레스 바 UI 렌더링
         hynix_ratio = (hynix_cap / samsung_cap) * 100
         bar_width = min(hynix_ratio, 100)
-        diff_cap = samsung_cap - hynix_cap # 두 기업의 시총 격차 계산
+        diff_cap = samsung_cap - hynix_cap 
         
+        # 💡 수정된 부분: HTML 문자열의 왼쪽 들여쓰기를 완벽히 제거하여 코드 블록으로 인식되는 현상 방지
         progress_html = f"""
-        <div class="pg-container">
-            <div class="pg-title">🏃‍♂️ 게섯거라 삼성전자!</div>
-            <div class="pg-labels">
-                <div class="pg-label-box" style="text-align: left;">
-                    <span class="pg-label-name">SK하이닉스</span>
-                    <span class="pg-label-cap">{hynix_cap:,.1f}조 원</span>
-                </div>
-                
-                <div class="pg-diff">
-                    {diff_cap:,.1f}조 원 차이
-                </div>
-                
-                <div class="pg-label-box" style="text-align: right;">
-                    <span class="pg-label-name">삼성전자</span>
-                    <span class="pg-label-cap">{samsung_cap:,.1f}조 원</span>
-                </div>
-            </div>
-            
-            <div class="pg-track">
-                <div class="pg-fill" style="width: {bar_width}%;"></div>
-                <div class="pg-thumb" style="left: {bar_width}%;">{hynix_ratio:.1f}%</div>
-            </div>
+<div class="pg-container">
+    <div class="pg-title">🏃‍♂️ 게섯거라 삼성전자!</div>
+    <div class="pg-labels">
+        <div class="pg-label-box" style="text-align: left;">
+            <span class="pg-label-name">SK하이닉스</span>
+            <span class="pg-label-cap">{hynix_cap:,.1f}조 원</span>
         </div>
-        """
+        <div class="pg-diff">
+            {diff_cap:,.1f}조 원 차이
+        </div>
+        <div class="pg-label-box" style="text-align: right;">
+            <span class="pg-label-name">삼성전자</span>
+            <span class="pg-label-cap">{samsung_cap:,.1f}조 원</span>
+        </div>
+    </div>
+    <div class="pg-track">
+        <div class="pg-fill" style="width: {bar_width}%;"></div>
+        <div class="pg-thumb" style="left: {bar_width}%;">{hynix_ratio:.1f}%</div>
+    </div>
+</div>
+"""
         st.markdown(progress_html, unsafe_allow_html=True)
 
-        # 3. 메트릭 카드 UI
         col1, col2 = st.columns(2)
         col3, col4 = st.columns(2)
         columns = [col1, col2, col3, col4]
@@ -196,7 +183,6 @@ def render_dashboard():
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # 4. 바 차트 렌더링
         fig = go.Figure(
             go.Bar(
                 x=list(stocks.keys()),
