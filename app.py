@@ -44,17 +44,26 @@ modern_css = """
     div[data-testid="stMetricLabel"] { color: #515154 !important; font-weight: 600 !important; font-size: 1.1rem !important; }
     div[data-testid="stMetricValue"] { color: #1d1d1f !important; font-weight: 800 !important; font-size: 1.9rem !important; }
 
-    /* --- 🚀 업데이트된 프로그레스 바 스타일 (하이닉스 오렌지) --- */
+    /* --- 🚀 업데이트된 프로그레스 바 스타일 --- */
     .pg-container {
-        background: #ffffff; border-radius: 16px; padding: 25px 30px;
+        background: #ffffff; border-radius: 16px; padding: 25px 30px 35px 30px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid #eaeaea;
         margin-bottom: 30px;
     }
-    .pg-title { font-size: 1.1rem; font-weight: 800; color: #E63312; margin-bottom: 15px; }
+    .pg-title { font-size: 1.1rem; font-weight: 800; color: #E63312; margin-bottom: 20px; }
+    
+    /* 양끝 텍스트와 중앙 텍스트 정렬을 위한 Flex 레이아웃 */
     .pg-labels {
-        display: flex; justify-content: space-between; align-items: flex-end;
-        font-size: 0.95rem; color: #86868b; font-weight: 700; margin-bottom: 10px;
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 15px;
     }
+    .pg-label-box { display: flex; flex-direction: column; }
+    .pg-label-name { font-size: 1.05rem; font-weight: 800; color: #333; }
+    .pg-label-cap { font-size: 0.9rem; font-weight: 600; color: #86868b; margin-top: 3px; }
+    
+    /* 중앙 격차 금액 텍스트 */
+    .pg-diff { color: #E63312; font-weight: 900; font-size: 1.7rem; letter-spacing: -0.5px; }
+
     .pg-track { background-color: #e9ecef; height: 14px; border-radius: 10px; position: relative; width: 100%; }
     .pg-fill {
         background-color: #E63312; height: 100%; border-radius: 10px;
@@ -65,6 +74,7 @@ modern_css = """
         background-color: #E63312; color: #ffffff; font-weight: 800; font-size: 0.85rem;
         padding: 4px 12px; border-radius: 20px; box-shadow: 0 2px 8px rgba(230, 51, 18, 0.4);
         transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
     }
 </style>
 """
@@ -125,21 +135,33 @@ def render_dashboard():
         samsung_cap = caps["삼성전자"]
         hynix_cap = caps["SK하이닉스"]
         
-        # 🚀 2. 코스피 1위 추격 프로그레스 바 UI 렌더링 (디자인 업데이트)
+        # 🚀 2. 코스피 1위 추격 프로그레스 바 UI 렌더링
         hynix_ratio = (hynix_cap / samsung_cap) * 100
-        bar_width = min(hynix_ratio, 100) # 바 길이가 100%를 넘지 않도록 제한
+        bar_width = min(hynix_ratio, 100)
+        diff_cap = samsung_cap - hynix_cap # 두 기업의 시총 격차 계산
         
         progress_html = f"""
         <div class="pg-container">
             <div class="pg-title">🏃‍♂️ 게섯거라 삼성전자!</div>
             <div class="pg-labels">
-                <span>SK하이닉스</span>
-                <span style="color:#E63312; font-weight:900; font-size:1.8rem;">{hynix_ratio:.1f}%</span>
-                <span>삼성전자</span>
+                <div class="pg-label-box" style="text-align: left;">
+                    <span class="pg-label-name">SK하이닉스</span>
+                    <span class="pg-label-cap">{hynix_cap:,.1f}조 원</span>
+                </div>
+                
+                <div class="pg-diff">
+                    {diff_cap:,.1f}조 원 차이
+                </div>
+                
+                <div class="pg-label-box" style="text-align: right;">
+                    <span class="pg-label-name">삼성전자</span>
+                    <span class="pg-label-cap">{samsung_cap:,.1f}조 원</span>
+                </div>
             </div>
+            
             <div class="pg-track">
                 <div class="pg-fill" style="width: {bar_width}%;"></div>
-                <div class="pg-thumb" style="left: {bar_width}%;">{hynix_ratio:.1f}</div>
+                <div class="pg-thumb" style="left: {bar_width}%;">{hynix_ratio:.1f}%</div>
             </div>
         </div>
         """
@@ -158,7 +180,6 @@ def render_dashboard():
                     delta_text = f"{current_cap:,.1f} 조 원"
                     delta_color = "off"
                 elif name == "SK하이닉스":
-                    diff_cap = samsung_cap - current_cap
                     delta_text = f"삼성 대비 {hynix_ratio:.2f}% ( -{diff_cap:,.1f}조 차이 )"
                     delta_color = "normal"
                 else:
