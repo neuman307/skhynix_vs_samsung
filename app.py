@@ -24,6 +24,7 @@ modern_css = """
         animation: gradient-text 4s ease infinite;
         text-shadow: 0px 4px 15px rgba(0,0,0,0.1);
         letter-spacing: -1px;
+        line-height: 1.2; /* 줄바꿈 시 위아래 간격 조절 */
     }
     
     /* 타이틀 애니메이션 키프레임 */
@@ -48,8 +49,8 @@ modern_css = """
 """
 st.markdown(modern_css, unsafe_allow_html=True)
 
-# 변경된 화려한 제목
-st.markdown("<div class='main-title'>코스피 4대장 현재가 및 시총</div>", unsafe_allow_html=True)
+# 🚀 제목에 <br> 태그를 넣어 줄바꿈 적용
+st.markdown("<div class='main-title'>코스피 4대장<br>현재가 및 시총</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-title'>⚡ 네이버 금융 실시간 연동 (10초 자동 갱신)</div>", unsafe_allow_html=True)
 st.markdown("---")
 
@@ -110,19 +111,14 @@ def render_dashboard():
             with columns[i]:
                 current_cap = caps[name]
                 
-                # 1. 삼성전자는 시총 수치 표기
                 if name == "삼성전자":
                     delta_text = f"{current_cap:,.1f} 조 원"
                     delta_color = "off"
-                
-                # 2. SK하이닉스는 퍼센트 + 차이나는 시총(조 원) 함께 표기
                 elif name == "SK하이닉스":
                     percentage = (current_cap / samsung_cap) * 100
-                    diff_cap = samsung_cap - current_cap # 차이나는 금액 계산
+                    diff_cap = samsung_cap - current_cap
                     delta_text = f"삼성 대비 {percentage:.2f}% ( -{diff_cap:,.1f}조 차이 )"
                     delta_color = "normal"
-                
-                # 3. 나머지는 퍼센트만 표기
                 else:
                     percentage = (current_cap / samsung_cap) * 100
                     delta_text = f"삼성 대비 {percentage:.2f}%"
