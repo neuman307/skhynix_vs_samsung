@@ -3,14 +3,39 @@ import requests
 from bs4 import BeautifulSoup
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="국내 주요 Tech 시총 비교", page_icon="📈", layout="wide")
+st.set_page_config(page_title="코스피 4대장 시총 대시보드", page_icon="🔥", layout="wide")
 
-# (기존에 사용했던 modern_css 스타일 코드는 그대로 유지합니다)
+# 화려한 타이틀과 모던 카드 스타일 CSS 적용
 modern_css = """
 <style>
     .stApp { background-color: #f5f7fa; font-family: 'Pretendard', sans-serif; }
-    .main-title { font-size: 2.2rem; font-weight: 800; color: #1d1d1f; text-align: center; margin-bottom: 5px; }
-    .sub-title { text-align: center; color: #86868b; font-size: 1.05rem; margin-bottom: 30px; }
+    
+    /* 화려한 애니메이션 그라데이션 타이틀 */
+    .main-title { 
+        font-size: 2.8rem; 
+        font-weight: 900; 
+        text-align: center; 
+        margin-bottom: 5px; 
+        /* 트렌디한 그라데이션 색상 조합 */
+        background: linear-gradient(45deg, #FF3CAC, #784BA0, #2B86C5, #FF3CAC);
+        background-size: 300% 300%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: gradient-text 4s ease infinite;
+        text-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+        letter-spacing: -1px;
+    }
+    
+    /* 타이틀 애니메이션 키프레임 */
+    @keyframes gradient-text {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .sub-title { text-align: center; color: #86868b; font-size: 1.05rem; margin-bottom: 30px; font-weight: 500; }
+    
+    /* 깔끔한 글래스모피즘 카드 */
     div[data-testid="metric-container"] {
         background-color: #ffffff; border-radius: 16px; padding: 24px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid #eaeaea;
@@ -23,16 +48,14 @@ modern_css = """
 """
 st.markdown(modern_css, unsafe_allow_html=True)
 
-st.markdown("<div class='main-title'>국내 주요 Tech 기업 시가총액 비교</div>", unsafe_allow_html=True)
+# 변경된 화려한 제목
+st.markdown("<div class='main-title'>코스피 4대장 현재가 및 시총</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-title'>⚡ 네이버 금융 실시간 연동 (10초 자동 갱신)</div>", unsafe_allow_html=True)
 st.markdown("---")
 
-# 네이버 금융에서 실시간 현재가를 크롤링하는 함수
-# 네이버 금융에서 실시간 현재가를 크롤링하는 함수 (강화 버전)
+# 네이버 금융 크롤링 함수
 def get_realtime_price_naver(code):
     url = f"https://finance.naver.com/item/main.naver?code={code}"
-    
-    # 일반 사람의 브라우저인 것처럼 완벽하게 위장하는 헤더
     headers = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2.1 Safari/605.1.15',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -40,35 +63,22 @@ def get_realtime_price_naver(code):
         'Connection': 'keep-alive',
         'Referer': 'https://finance.naver.com/'
     }
-    
     try:
-        # 타임아웃을 3초로 주어 무한정 멈춰있는 것 방지
         res = requests.get(url, headers=headers, timeout=3)
-        
-        # 200(정상)이 아니면 차단당한 것
         if res.status_code != 200:
-            st.error(f"[{code}] 네이버 접속 차단됨 (에러 코드: {res.status_code})")
+            st.error(f"[{code}] 접속 차단 (에러 코드: {res.status_code})")
             return 0
-            
         soup = BeautifulSoup(res.text, 'html.parser')
-        
         today_div = soup.find('div', {'class': 'today'})
         if today_div:
             price_str = today_div.find('span', {'class': 'blind'}).text
             return int(price_str.replace(',', ''))
-        else:
-            st.error(f"[{code}] 페이지 구조를 읽지 못했습니다. (봇 방지 캡차 의심)")
-            return 0
-            
-    except requests.exceptions.Timeout:
-        st.error(f"[{code}] 네이버 응답이 너무 느립니다. (타임아웃)")
         return 0
     except Exception as e:
         st.error(f"[{code}] 오류 발생: {e}")
         return 0
 
-
-# 10초마다 재실행 (차단 방지를 위해 시간 상향)
+# 10초마다 데이터 갱신
 @st.fragment(run_every=10)
 def render_dashboard():
     try:
@@ -82,13 +92,11 @@ def render_dashboard():
         caps = {}
         prices = {}
 
-        # 네이버 실시간 데이터 크롤링
         for name, info in stocks.items():
             price = get_realtime_price_naver(info["code"])
             if price == 0:
                 st.warning(f"{name} 실시간 데이터를 불러오지 못했습니다.")
                 return
-            
             prices[name] = price
             caps[name] = (price * info["shares"]) / 1000000000000
 
@@ -101,9 +109,20 @@ def render_dashboard():
         for i, (name, info) in enumerate(stocks.items()):
             with columns[i]:
                 current_cap = caps[name]
+                
+                # 1. 삼성전자는 시총 수치 표기
                 if name == "삼성전자":
                     delta_text = f"{current_cap:,.1f} 조 원"
                     delta_color = "off"
+                
+                # 2. SK하이닉스는 퍼센트 + 차이나는 시총(조 원) 함께 표기
+                elif name == "SK하이닉스":
+                    percentage = (current_cap / samsung_cap) * 100
+                    diff_cap = samsung_cap - current_cap # 차이나는 금액 계산
+                    delta_text = f"삼성 대비 {percentage:.2f}% ( -{diff_cap:,.1f}조 차이 )"
+                    delta_color = "normal"
+                
+                # 3. 나머지는 퍼센트만 표기
                 else:
                     percentage = (current_cap / samsung_cap) * 100
                     delta_text = f"삼성 대비 {percentage:.2f}%"
@@ -130,7 +149,7 @@ def render_dashboard():
         )
         
         fig.update_layout(
-            title=dict(text="기업별 시가총액 비교 차트", font=dict(size=18, color="#1d1d1f")),
+            title=dict(text="실시간 시가총액 비교 차트", font=dict(size=18, color="#1d1d1f")),
             xaxis=dict(tickfont=dict(size=14, color="#515154")),
             yaxis=dict(title="시가총액 (조 원)", tickfont=dict(color="#515154")),
             template="plotly_white",
