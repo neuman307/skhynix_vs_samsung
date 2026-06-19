@@ -117,11 +117,11 @@ def render_dashboard():
                 elif name == "SK하이닉스":
                     percentage = (current_cap / samsung_cap) * 100
                     diff_cap = samsung_cap - current_cap
-                    delta_text = f"삼성 대비 {percentage:.2f}% ( -{diff_cap:,.1f}조 차이 )"
+                    delta_text = f"삼성전자 대비 {percentage:.2f}% ( -{diff_cap:,.1f}조 차이 )"
                     delta_color = "normal"
                 else:
                     percentage = (current_cap / samsung_cap) * 100
-                    delta_text = f"삼성 대비 {percentage:.2f}%"
+                    delta_text = f"삼성전자 대비 {percentage:.2f}%"
                     delta_color = "normal"
 
                 st.metric(
