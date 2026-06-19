@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="코스피 4대장 시총 대시보드", page_icon="🔥", layout="wide")
 
-# 화려한 타이틀, 모던 카드, 프로그레스 바 CSS 적용
+# 화려한 타이틀, 모던 카드, 하이닉스 오렌지 프로그레스 바 CSS 적용
 modern_css = """
 <style>
     .stApp { background-color: #f5f7fa; font-family: 'Pretendard', sans-serif; }
@@ -44,26 +44,26 @@ modern_css = """
     div[data-testid="stMetricLabel"] { color: #515154 !important; font-weight: 600 !important; font-size: 1.1rem !important; }
     div[data-testid="stMetricValue"] { color: #1d1d1f !important; font-weight: 800 !important; font-size: 1.9rem !important; }
 
-    /* --- 🚀 새로 추가된 프로그레스 바 스타일 --- */
+    /* --- 🚀 업데이트된 프로그레스 바 스타일 (하이닉스 오렌지) --- */
     .pg-container {
         background: #ffffff; border-radius: 16px; padding: 25px 30px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid #eaeaea;
         margin-bottom: 30px;
     }
-    .pg-title { font-size: 1rem; font-weight: 700; color: #0d9467; margin-bottom: 15px; }
+    .pg-title { font-size: 1.1rem; font-weight: 800; color: #E63312; margin-bottom: 15px; }
     .pg-labels {
         display: flex; justify-content: space-between; align-items: flex-end;
         font-size: 0.95rem; color: #86868b; font-weight: 700; margin-bottom: 10px;
     }
     .pg-track { background-color: #e9ecef; height: 14px; border-radius: 10px; position: relative; width: 100%; }
     .pg-fill {
-        background-color: #0d9467; height: 100%; border-radius: 10px;
+        background-color: #E63312; height: 100%; border-radius: 10px;
         transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .pg-thumb {
         position: absolute; top: 50%; transform: translate(-50%, -50%);
-        background-color: #0d9467; color: #ffffff; font-weight: 800; font-size: 0.85rem;
-        padding: 4px 12px; border-radius: 20px; box-shadow: 0 2px 8px rgba(13, 148, 103, 0.4);
+        background-color: #E63312; color: #ffffff; font-weight: 800; font-size: 0.85rem;
+        padding: 4px 12px; border-radius: 20px; box-shadow: 0 2px 8px rgba(230, 51, 18, 0.4);
         transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
     }
 </style>
@@ -125,17 +125,17 @@ def render_dashboard():
         samsung_cap = caps["삼성전자"]
         hynix_cap = caps["SK하이닉스"]
         
-        # 🚀 2. 코스피 1위 추격 프로그레스 바 UI 렌더링
+        # 🚀 2. 코스피 1위 추격 프로그레스 바 UI 렌더링 (디자인 업데이트)
         hynix_ratio = (hynix_cap / samsung_cap) * 100
         bar_width = min(hynix_ratio, 100) # 바 길이가 100%를 넘지 않도록 제한
         
         progress_html = f"""
         <div class="pg-container">
-            <div class="pg-title">🏆 코스피 시가총액 1위까지</div>
+            <div class="pg-title">🏃‍♂️ 게섯거라 삼성전자!</div>
             <div class="pg-labels">
-                <span>000660</span>
-                <span style="color:#0d9467; font-weight:900; font-size:1.8rem;">{hynix_ratio:.1f}%</span>
-                <span>005930</span>
+                <span>SK하이닉스</span>
+                <span style="color:#E63312; font-weight:900; font-size:1.8rem;">{hynix_ratio:.1f}%</span>
+                <span>삼성전자</span>
             </div>
             <div class="pg-track">
                 <div class="pg-fill" style="width: {bar_width}%;"></div>
