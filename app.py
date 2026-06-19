@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="코스피 4대장 시총 대시보드", page_icon="🔥", layout="wide")
 
-# 화려한 타이틀과 모던 카드 스타일 CSS 적용
+# 화려한 타이틀, 모던 카드, 프로그레스 바 CSS 적용
 modern_css = """
 <style>
     .stApp { background-color: #f5f7fa; font-family: 'Pretendard', sans-serif; }
@@ -16,7 +16,6 @@ modern_css = """
         font-weight: 900; 
         text-align: center; 
         margin-bottom: 5px; 
-        /* 트렌디한 그라데이션 색상 조합 */
         background: linear-gradient(45deg, #FF3CAC, #784BA0, #2B86C5, #FF3CAC);
         background-size: 300% 300%;
         -webkit-background-clip: text;
@@ -24,19 +23,18 @@ modern_css = """
         animation: gradient-text 4s ease infinite;
         text-shadow: 0px 4px 15px rgba(0,0,0,0.1);
         letter-spacing: -1px;
-        line-height: 1.2; /* 줄바꿈 시 위아래 간격 조절 */
+        line-height: 1.2;
     }
     
-    /* 타이틀 애니메이션 키프레임 */
     @keyframes gradient-text {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
     }
 
-    .sub-title { text-align: center; color: #86868b; font-size: 1.05rem; margin-bottom: 30px; font-weight: 500; }
+    .sub-title { text-align: center; color: #86868b; font-size: 1.05rem; margin-bottom: 20px; font-weight: 500; }
     
-    /* 깔끔한 글래스모피즘 카드 */
+    /* 모던 글래스모피즘 카드 */
     div[data-testid="metric-container"] {
         background-color: #ffffff; border-radius: 16px; padding: 24px;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid #eaeaea;
@@ -45,14 +43,36 @@ modern_css = """
     div[data-testid="metric-container"]:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); }
     div[data-testid="stMetricLabel"] { color: #515154 !important; font-weight: 600 !important; font-size: 1.1rem !important; }
     div[data-testid="stMetricValue"] { color: #1d1d1f !important; font-weight: 800 !important; font-size: 1.9rem !important; }
+
+    /* --- 🚀 새로 추가된 프로그레스 바 스타일 --- */
+    .pg-container {
+        background: #ffffff; border-radius: 16px; padding: 25px 30px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04); border: 1px solid #eaeaea;
+        margin-bottom: 30px;
+    }
+    .pg-title { font-size: 1rem; font-weight: 700; color: #0d9467; margin-bottom: 15px; }
+    .pg-labels {
+        display: flex; justify-content: space-between; align-items: flex-end;
+        font-size: 0.95rem; color: #86868b; font-weight: 700; margin-bottom: 10px;
+    }
+    .pg-track { background-color: #e9ecef; height: 14px; border-radius: 10px; position: relative; width: 100%; }
+    .pg-fill {
+        background-color: #0d9467; height: 100%; border-radius: 10px;
+        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .pg-thumb {
+        position: absolute; top: 50%; transform: translate(-50%, -50%);
+        background-color: #0d9467; color: #ffffff; font-weight: 800; font-size: 0.85rem;
+        padding: 4px 12px; border-radius: 20px; box-shadow: 0 2px 8px rgba(13, 148, 103, 0.4);
+        transition: left 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 </style>
 """
 st.markdown(modern_css, unsafe_allow_html=True)
 
-# 🚀 제목에 <br> 태그를 넣어 줄바꿈 적용
+# 메인 타이틀
 st.markdown("<div class='main-title'>코스피 4대장<br>현재가 및 시총</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-title'>⚡ 네이버 금융 실시간 연동 (10초 자동 갱신)</div>", unsafe_allow_html=True)
-st.markdown("---")
 
 # 네이버 금융 크롤링 함수
 def get_realtime_price_naver(code):
@@ -93,6 +113,7 @@ def render_dashboard():
         caps = {}
         prices = {}
 
+        # 1. 최신 데이터 수집
         for name, info in stocks.items():
             price = get_realtime_price_naver(info["code"])
             if price == 0:
@@ -102,7 +123,29 @@ def render_dashboard():
             caps[name] = (price * info["shares"]) / 1000000000000
 
         samsung_cap = caps["삼성전자"]
+        hynix_cap = caps["SK하이닉스"]
+        
+        # 🚀 2. 코스피 1위 추격 프로그레스 바 UI 렌더링
+        hynix_ratio = (hynix_cap / samsung_cap) * 100
+        bar_width = min(hynix_ratio, 100) # 바 길이가 100%를 넘지 않도록 제한
+        
+        progress_html = f"""
+        <div class="pg-container">
+            <div class="pg-title">🏆 코스피 시가총액 1위까지</div>
+            <div class="pg-labels">
+                <span>000660</span>
+                <span style="color:#0d9467; font-weight:900; font-size:1.8rem;">{hynix_ratio:.1f}%</span>
+                <span>005930</span>
+            </div>
+            <div class="pg-track">
+                <div class="pg-fill" style="width: {bar_width}%;"></div>
+                <div class="pg-thumb" style="left: {bar_width}%;">{hynix_ratio:.1f}</div>
+            </div>
+        </div>
+        """
+        st.markdown(progress_html, unsafe_allow_html=True)
 
+        # 3. 메트릭 카드 UI
         col1, col2 = st.columns(2)
         col3, col4 = st.columns(2)
         columns = [col1, col2, col3, col4]
@@ -115,13 +158,12 @@ def render_dashboard():
                     delta_text = f"{current_cap:,.1f} 조 원"
                     delta_color = "off"
                 elif name == "SK하이닉스":
-                    percentage = (current_cap / samsung_cap) * 100
                     diff_cap = samsung_cap - current_cap
-                    delta_text = f"삼성전자 대비 {percentage:.2f}% ( -{diff_cap:,.1f}조 차이 )"
+                    delta_text = f"삼성 대비 {hynix_ratio:.2f}% ( -{diff_cap:,.1f}조 차이 )"
                     delta_color = "normal"
                 else:
                     percentage = (current_cap / samsung_cap) * 100
-                    delta_text = f"삼성전자 대비 {percentage:.2f}%"
+                    delta_text = f"삼성 대비 {percentage:.2f}%"
                     delta_color = "normal"
 
                 st.metric(
@@ -133,6 +175,7 @@ def render_dashboard():
 
         st.markdown("<br>", unsafe_allow_html=True)
 
+        # 4. 바 차트 렌더링
         fig = go.Figure(
             go.Bar(
                 x=list(stocks.keys()),
