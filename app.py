@@ -29,9 +29,10 @@ def render_dashboard():
         samsung_price = int(samsung_data['Close'].iloc[-1])
         hynix_price = int(hynix_data['Close'].iloc[-1])
 
-        # 시가총액 계산 (주식수 * 현재가 / 1억)
-        samsung_cap = int((samsung_price * samsung_shares) / 100000000)
-        hynix_cap = int((hynix_price * hynix_shares) / 100000000)
+        # 시가총액 계산 (주식수 * 현재가 / 1조)
+        # 소수점까지 깔끔하게 계산하기 위해 float(실수) 형태로 유지합니다.
+        samsung_cap = (samsung_price * samsung_shares) / 1000000000000
+        hynix_cap = (hynix_price * hynix_shares) / 1000000000000
         
         # 비율 계산
         percentage = (hynix_cap / samsung_cap) * 100
@@ -42,7 +43,8 @@ def render_dashboard():
             st.metric(
                 label="삼성전자 (현재가 / 시총)", 
                 value=f"{samsung_price:,} 원", 
-                delta=f"{samsung_cap:,} 억 원"
+                # 소수점 첫째 자리까지 조 단위 표기
+                delta=f"{samsung_cap:,.1f} 조 원" 
             )
         with col2:
             st.metric(
@@ -61,12 +63,13 @@ def render_dashboard():
                 x=["삼성전자", "SK하이닉스"],
                 y=[samsung_cap, hynix_cap],
                 marker_color=["#0A47A3", "#FF6C00"],
-                text=[f"{samsung_cap:,}억", f"{hynix_cap:,}억"],
+                # 그래프 위 텍스트도 조 단위로 변경
+                text=[f"{samsung_cap:,.1f}조", f"{hynix_cap:,.1f}조"], 
                 textposition="auto",
             )
         )
         fig.update_layout(
-            title="실시간 시가총액 비교 (단위: 억 원)",
+            title="실시간 시가총액 비교 (단위: 조 원)",
             xaxis_title="기업명",
             yaxis_title="시가총액",
             template="plotly_white",
