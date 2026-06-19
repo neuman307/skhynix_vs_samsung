@@ -1,183 +1,142 @@
 import streamlit as st
 import yfinance as yf
 import plotly.graph_objects as go
-import time
 
-# 1. 페이지 테마 설정 및 CSS 주입
-st.set_page_config(page_title="NEO-SEOUL MARKET CAP", page_icon="🧬", layout="wide")
+# 1. 페이지 테마 설정 (넓은 화면 사용)
+st.set_page_config(page_title="국내 주요 Tech 시총 비교", page_icon="📈", layout="wide")
 
-# 사이버펑크 CSS 정의
-cyberpunk_css = """
+# 2. 세련된 모던(Light) 스타일 CSS 주입
+modern_css = """
 <style>
-    /* 전체 배경: 어두운 그리드 패턴 */
+    /* 전체 배경: 부드러운 라이트 그레이 */
     .stApp {
-        background-color: #0d1117;
-        background-image: 
-            linear-gradient(rgba(10, 10, 30, 0.7) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(10, 10, 30, 0.7) 1px, transparent 1px);
-        background-size: 50px 50px;
-        color: #e0e0e0;
-        font-family: 'Courier New', Courier, monospace; /* 미래지향적인 폰트 느낌 */
+        background-color: #f5f7fa;
+        font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-
-    /* 제목: 네온 그린 & 글리치 효과 */
-    .cyber-title {
-        color: #39ff14; /* 네온 그린 */
+    
+    /* 깔끔한 한 줄 제목 스타일 */
+    .main-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #1d1d1f; /* 짙은 다크 그레이 */
         text-align: center;
-        text-transform: uppercase;
-        font-size: 2.8em;
-        font-weight: bold;
-        text-shadow: 
-            0 0 5px #39ff14,
-            0 0 10px #39ff14,
-            0 0 20px #39ff14,
-            0 0 40px #39ff14,
-            0 0 80px #39ff14;
-        position: relative;
-        overflow: hidden;
+        margin-bottom: 5px;
+        letter-spacing: -0.5px;
+    }
+    .sub-title {
+        text-align: center;
+        color: #86868b;
+        font-size: 1.05rem;
         margin-bottom: 30px;
-        letter-spacing: 2px;
     }
 
-    /* 네온 텍스트 스타일 */
-    .neon-blue { color: #00ffff; text-shadow: 0 0 5px #00ffff; }
-    .neon-pink { color: #ff00ff; text-shadow: 0 0 5px #ff00ff; }
-    .neon-orange { color: #ff9900; text-shadow: 0 0 5px #ff9900; }
-
-    /* 일반 텍스트 및 안내 메시지 */
-    .stAlert, .stMarkdown {
-        background-color: rgba(20, 20, 40, 0.5);
-        border: 1px solid #333;
-        color: #aaa;
+    /* 애플/토스 스타일의 글래스모피즘 카드 */
+    div[data-testid="metric-container"] {
+        background-color: #ffffff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+        border: 1px solid #eaeaea;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-
-    /* 메트릭 상자: 네온 테두리 */
-    .stMetric {
-        background-color: rgba(20, 20, 40, 0.7);
-        border: 2px solid #333;
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 0 15px rgba(50, 50, 100, 0.5);
-        transition: border-color 0.3s;
+    div[data-testid="metric-container"]:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
     }
-
-    .stMetric:hover {
-        border-color: #ff00ff; /* 핑크색으로 변화 */
-        box-shadow: 0 0 20px rgba(255, 0, 255, 0.7);
+    
+    /* 메트릭 텍스트 가독성 극대화 */
+    div[data-testid="stMetricLabel"] {
+        color: #515154 !important;
+        font-weight: 600 !important;
+        font-size: 1.1rem !important;
     }
-
-    /* 메트릭 값: 각 기업 색상 적용 */
-    .samsung-metric .stMetricValue { color: #00ffff !important; text-shadow: 0 0 10px #00ffff; }
-    .hynix-metric .stMetricValue { color: #ff9900 !important; text-shadow: 0 0 10px #ff9900; }
-
-    /* Plotly 그래프 영역: 어두운 배경 */
-    .plot-container > div {
-        background-color: rgba(10, 10, 20, 0.8);
-        border-radius: 10px;
-        border: 1px solid #333;
+    div[data-testid="stMetricValue"] {
+        color: #1d1d1f !important;
+        font-weight: 800 !important;
+        font-size: 1.9rem !important;
     }
 </style>
 """
 
-# CSS 주입
-st.markdown(cyberpunk_css, unsafe_allow_html=True)
+st.markdown(modern_css, unsafe_allow_html=True)
 
 # 제목 표시
-st.markdown("<div class='cyber-title'>NEO-SEOUL MARKET CAP</div>", unsafe_allow_html=True)
-st.write(
-    "<p style='text-align: center; color: #aaa;'>예측 불가능한 디지털 시장, 5초마다 리얼타임 데이터 동기화 중...</p>",
-    unsafe_allow_html=True,
-)
+st.markdown("<div class='main-title'>국내 주요 Tech 기업 시가총액 비교</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-title'>실시간 주가 연동 대시보드 (5초 자동 갱신)</div>", unsafe_allow_html=True)
 st.markdown("---")
 
-# 5초마다 이 안의 코드만 재실행 (st.fragment)
+# 5초마다 이 안의 코드만 재실행
 @st.fragment(run_every=5)
 def render_dashboard():
     try:
-        # 발행주식수 (보통주 기준 고정값 세팅)
-        samsung_shares = 5969782550
-        hynix_shares = 728002365
+        # 4개 종목의 티커(Ticker), 대략적 발행주식수, 브랜드 컬러 설정
+        stocks = {
+            "삼성전자": {"ticker": "005930.KS", "shares": 5969782550, "color": "#0A47A3"},
+            "SK하이닉스": {"ticker": "000660.KS", "shares": 728002365, "color": "#E63312"},
+            "SK스퀘어": {"ticker": "402340.KS", "shares": 137348730, "color": "#F29023"},
+            "삼성전기": {"ticker": "009150.KS", "shares": 74693696, "color": "#1428A0"}
+        }
 
-        # yfinance를 통해 오늘 하루치 주가 데이터를 가장 빠르게 조회
-        samsung_data = yf.Ticker("005930.KS").history(period="1d")
-        hynix_data = yf.Ticker("000660.KS").history(period="1d")
+        caps = {}
+        prices = {}
 
-        if samsung_data.empty or hynix_data.empty:
-            st.warning(
-                "<span class='neon-orange'>데이터 네트워크 연결 실패. 오프라인 모드일 수 있습니다.</span>",
-                unsafe_allow_html=True,
-            )
-            return
+        # 3. 데이터 수집 및 계산 (각 종목별 최신가 가져오기)
+        for name, info in stocks.items():
+            data = yf.Ticker(info["ticker"]).history(period="1d")
+            if data.empty:
+                st.warning(f"{name} 데이터를 불러올 수 없습니다.")
+                return
+            
+            # 현재가 및 시총(조 단위) 계산
+            prices[name] = int(data["Close"].iloc[-1])
+            caps[name] = (prices[name] * info["shares"]) / 1000000000000
 
-        # 가장 최근 종가(현재가) 추출
-        samsung_price = int(samsung_data["Close"].iloc[-1])
-        hynix_price = int(hynix_data["Close"].iloc[-1])
+        # 기준이 되는 삼성전자 시총
+        samsung_cap = caps["삼성전자"]
 
-        # 시가총액 계산 (주식수 * 현재가 / 1조)
-        samsung_cap = (samsung_price * samsung_shares) / 1000000000000
-        hynix_cap = (hynix_price * hynix_shares) / 1000000000000
-
-        # 비율 계산
-        percentage = (hynix_cap / samsung_cap) * 100
-
-        # 메인 카드 UI 출력
+        # 4. 카드형 UI 배치 (2x2 그리드 배열)
         col1, col2 = st.columns(2)
-        with col1:
-            st.markdown("<div class='samsung-metric'>", unsafe_allow_html=True)
-            st.metric(
-                label="삼성전자 (현재가 / 시총)",
-                value=f"{samsung_price:,} 원",
-                delta=f"{samsung_cap:,.1f} 조 원",
-            )
-            st.markdown("</div>", unsafe_allow_html=True)
-        with col2:
-            st.markdown("<div class='hynix-metric'>", unsafe_allow_html=True)
-            st.metric(
-                label="SK하이닉스 (현재가 / 시총)",
-                value=f"{hynix_price:,} 원",
-                delta=f"{hynix_cap:,.1f} 조 원",
-            )
-            st.markdown("</div>", unsafe_allow_html=True)
+        col3, col4 = st.columns(2)
+        columns = [col1, col2, col3, col4]
 
-        st.markdown("---")
-        st.info(
-            f"<span class='neon-blue'>네트워크 동기화 성공.</span> 현재 시총 비율은 <span class='neon-pink'>{percentage:.2f}%</span> 수준입니다.",
-            unsafe_allow_html=True,
-        )
+        for i, (name, info) in enumerate(stocks.items()):
+            with columns[i]:
+                current_cap = caps[name]
+                
+                # 삼성전자는 시총 수치를 보여주고, 나머지는 삼성 대비 %를 보여줌
+                if name == "삼성전자":
+                    delta_text = f"{current_cap:,.1f} 조 원"
+                    delta_color = "off"
+                else:
+                    percentage = (current_cap / samsung_cap) * 100
+                    delta_text = f"삼성 대비 {percentage:.2f}%"
+                    delta_color = "normal"
 
-        # Plotly 차트 출력
+                st.metric(
+                    label=f"{name}",
+                    value=f"{prices[name]:,} 원",
+                    delta=delta_text,
+                    delta_color=delta_color
+                )
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # 5. 깔끔한 막대 그래프 출력
         fig = go.Figure(
             go.Bar(
-                x=["삼성전자", "SK하이닉스"],
-                y=[samsung_cap, hynix_cap],
-                # 사이트바 고유 컬러 반영: 네온 블루, 네온 오렌지
-                marker_color=["#00ffff", "#ff9900"],
-                text=[f"{samsung_cap:,.1f}조", f"{hynix_cap:,.1f}조"],
+                x=list(stocks.keys()),
+                y=list(caps.values()),
+                marker_color=[info["color"] for info in stocks.values()],
+                text=[f"{cap:,.1f}조" for cap in caps.values()],
                 textposition="auto",
+                textfont=dict(color='white', size=14, weight='bold') # 막대 안의 글씨는 하얗게
             )
         )
+        
         fig.update_layout(
-            title={
-                "text": "실시간 시가총액 비교 (단위: 조 원)",
-                "font": {"color": "#e0e0e0"},
-            },
-            xaxis={"title": "기업명", "tickfont": {"color": "#aaa"}},
-            yaxis={"title": "시가총액", "tickfont": {"color": "#aaa"}},
-            template="plotly_dark", # 어두운 테마 그래프로 변경
-            height=400,
-            # 네온 그림자 효과 적용
-            margin=dict(l=20, r=20, t=50, b=20),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-    except Exception as e:
-        st.error(
-            f"<span class='neon-orange'>데이터 네트워크 치명적 오류 발생: {e}</span>",
-            unsafe_allow_html=True,
-        )
-
-
-# 앱 실행
-render_dashboard()
+            title=dict(text="기업별 시가총액 비교 차트", font=dict(size=18, color="#1d1d1f")),
+            xaxis=dict(tickfont=dict(size=14, color="#515154")),
+            yaxis=dict(title="시가총액 (조 원)", tickfont=dict(color="#515154")),
+            template="plotly_white",
+            height=450,
+            margin=dict(l=40, r=40,
