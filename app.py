@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 from bs4 import BeautifulSoup
 import plotly.graph_objects as go
+from datetime import datetime, timezone, timedelta
 
 st.set_page_config(page_title="코스피 4대장 시총 대시보드", page_icon="🔥", layout="wide")
 
@@ -86,7 +87,10 @@ modern_css = """
 st.markdown(modern_css, unsafe_allow_html=True)
 
 st.markdown("<div class='main-title'>코스피 4대장<br>현재가 및 시총</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-title'>⚡ 네이버 금융 실시간 연동 (10초 자동 갱신)</div>", unsafe_allow_html=True)
+
+# 메모리(세션 상태)에 가격 데이터를 저장할 공간
+if 'prices' not in st.session_state:
+    st.session_state.prices = {}
 
 def get_realtime_price_naver(code):
     url = f"https://finance.naver.com/item/main.naver?code={code}"
@@ -115,23 +119,49 @@ def get_realtime_price_naver(code):
 @st.fragment(run_every=10)
 def render_dashboard():
     try:
+        # 1. 한국 시간(KST) 및 장 운영 여부 확인
+        kst = timezone(timedelta(hours=9))
+        now = datetime.now(kst)
+        is_weekend = now.weekday() >= 5 # 5: 토요일, 6: 일요일
+        is_active_hours = (8 <= now.hour < 20) # 08:00 ~ 19:59 사이 여부
+        
+        is_market_open = is_active_hours and not is_weekend
+
+        # 상태 안내 메시지 표기
+        if is_market_open:
+            st.markdown(f"<div class='sub-title'>⚡ 실시간 연동 중 (최근 갱신: {now.strftime('%H:%M:%S')})</div>", unsafe_allow_html=True)
+        else:
+            st.markdown("<div class='sub-title'>🌙 장 마감 시간입니다. (평일 08:00~20:00 외 크롤링 중지)</div>", unsafe_allow_html=True)
+
+        # 2. 업데이트된 발행 주식 수 적용
         stocks = {
-            "삼성전자": {"code": "005930", "shares": 5969782550, "color": "#0A47A3"},
-            "SK하이닉스": {"code": "000660", "shares": 728002365, "color": "#E63312"},
+            "삼성전자": {"code": "005930", "shares": 5919637922, "color": "#0A47A3"},
+            "SK하이닉스": {"code": "000660", "shares": 712702365, "color": "#E63312"},
             "SK스퀘어": {"code": "402340", "shares": 137348730, "color": "#F29023"},
             "삼성전기": {"code": "009150", "shares": 74693696, "color": "#1428A0"}
         }
 
+        # 3. 크롤링 실행 조건: 장이 열려있거나, 저장된 가격 데이터가 하나도 없을 때(최초 실행)
+        needs_fetch = is_market_open or len(st.session_state.prices) == 0
+
+        if needs_fetch:
+            for name, info in stocks.items():
+                price = get_realtime_price_naver(info["code"])
+                if price != 0:
+                    st.session_state.prices[name] = price # 정상적으로 받아왔을 때만 세션에 저장
+        
+        # 데이터가 없을 경우 에러 처리
+        if len(st.session_state.prices) == 0:
+            st.warning("데이터를 불러오지 못했습니다. 잠시 후 다시 시도됩니다.")
+            return
+
         caps = {}
         prices = {}
 
+        # 4. 세션에 저장된 가격(실시간 또는 마지막 종가)을 불러와 시총 계산
         for name, info in stocks.items():
-            price = get_realtime_price_naver(info["code"])
-            if price == 0:
-                st.warning(f"{name} 실시간 데이터를 불러오지 못했습니다.")
-                return
-            prices[name] = price
-            caps[name] = (price * info["shares"]) / 1000000000000
+            prices[name] = st.session_state.prices[name]
+            caps[name] = (prices[name] * info["shares"]) / 1000000000000
 
         samsung_cap = caps["삼성전자"]
         hynix_cap = caps["SK하이닉스"]
@@ -142,7 +172,7 @@ def render_dashboard():
         
         progress_html = f"""
 <div class="pg-container">
-    <div class="pg-title">🏃‍♂️ 게섯거라 삼성전자!</div>
+    <div class="pg-title"> 🦀 게섯거라 삼성전자! 🏃‍♂️</div>
     <div class="pg-labels">
         <div class="pg-label-box" style="text-align: left;">
             <span class="pg-label-name">SK하이닉스</span>
@@ -216,6 +246,6 @@ def render_dashboard():
         st.plotly_chart(fig, use_container_width=True)
 
     except Exception as e:
-        st.error(f"네트워크 오류가 발생했습니다: {e}")
+        st.error(f"오류가 발생했습니다: {e}")
 
 render_dashboard()
