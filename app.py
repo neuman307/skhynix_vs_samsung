@@ -131,7 +131,7 @@ def render_dashboard():
         if is_market_open:
             st.markdown(f"<div class='sub-title'>⚡ 실시간 연동 중 (최근 갱신: {now.strftime('%H:%M:%S')})</div>", unsafe_allow_html=True)
         else:
-            st.markdown("<div class='sub-title'>🌙 장 마감 시간입니다. (평일 08:00~20:00 외 크롤링 중지)</div>", unsafe_allow_html=True)
+            st.markdown("<div class='sub-title'>🌙 장 마감 시간입니다. <br>(평일 08:00~20:00 외 크롤링 중지)</div>", unsafe_allow_html=True)
 
         # 2. 업데이트된 발행 주식 수 적용
         stocks = {
