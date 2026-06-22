@@ -167,9 +167,9 @@ def render_dashboard():
             st.markdown("<div class='sub-title'>🌙 장 마감 시간입니다. (국내 주가 네이버 크롤링 중지)</div>", unsafe_allow_html=True)
 
         stocks = {
-            "삼성전자": {"code": "005930", "shares": 5919637922, "color": "#0A47A3"},
+            "삼성전자": {"code": "005930", "shares": 5846279000, "color": "#0A47A3"},
             "SK하이닉스": {"code": "000660", "shares": 712702365, "color": "#E63312"},
-            "SK스퀘어": {"code": "402340", "shares": 137348730, "color": "#F29023"},
+            "SK스퀘어": {"code": "402340", "shares": 131958000, "color": "#F29023"},
             "삼성전기": {"code": "009150", "shares": 74693696, "color": "#1428A0"}
         }
 
